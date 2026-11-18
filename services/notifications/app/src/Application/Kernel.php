@@ -33,6 +33,8 @@ final class Kernel extends \Spiral\Framework\Kernel
             MonologBootloader::class,
             RoadRunnerBridge\LoggerBootloader::class,
             Framework\SnapshotsBootloader::class,
+            // Читання PHP-атрибутів (потрібно для #[RetryPolicy] на обробниках задач)
+            Framework\Attributes\AttributesBootloader::class,
 
             // RoadRunner Jobs consumer
             RoadRunnerBridge\QueueBootloader::class,
