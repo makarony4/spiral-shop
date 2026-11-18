@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Order;
 
+use App\Domain\Order\Exception\OrderCannotBeCancelledException;
 use Cycle\Annotated\Annotation\Column;
 use Cycle\Annotated\Annotation\Entity;
 use Cycle\Annotated\Annotation\Table\Index;
@@ -31,11 +32,14 @@ class Order
     #[Column(type: 'string', name: 'customer_email')]
     private string $customerEmail;
 
-    #[Column(type: 'string', typecast: OrderStatus::class)]
+    #[Column(type: 'string', typecast: OrderStatus::class, size: 32)]
     private OrderStatus $status;
 
     #[Column(type: 'datetime', name: 'created_at')]
     private \DateTimeImmutable $createdAt;
+
+    #[Column(type: 'datetime', name: 'cancelled_at', nullable: true)]
+    private ?\DateTimeImmutable $cancelledAt = null;
 
     public function __construct(int $productId, string $productName, int $unitPrice, int $quantity, string $customerEmail)
     {
@@ -57,4 +61,14 @@ class Order
     public function getCustomerEmail(): string { return $this->customerEmail; }
     public function getStatus(): OrderStatus { return $this->status; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function getCancelledAt(): ?\DateTimeImmutable { return $this->cancelledAt; }
+
+    public function cancel(): void
+    {
+        if ($this->status !== OrderStatus::Created) {
+            throw new OrderCannotBeCancelledException($this->id, $this->status);
+        }
+        $this->status = OrderStatus::Cancelled;
+        $this->cancelledAt = new \DateTimeImmutable();
+    }
 }

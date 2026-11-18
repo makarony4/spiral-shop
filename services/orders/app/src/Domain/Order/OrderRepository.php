@@ -26,4 +26,15 @@ final class OrderRepository extends Repository implements OrderRepositoryInterfa
 
         return $select->fetchAll();
     }
+
+    public function cancelled(int $limit, ?string $customerEmail = null): array
+    {
+        $select = $this->select()->where('cancelledAt', '!=', null)->orderBy('id', 'DESC')->limit($limit);
+
+        if ($customerEmail !== null) {
+            $select->where('customerEmail', $customerEmail);
+        }
+
+        return $select->fetchAll();
+    }
 }
