@@ -1,0 +1,32 @@
+version: "3"
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php app.php"
+  relay: pipes
+
+amqp:
+  addr: ${AMQP_DSN:-amqp://guest:guest@rabbitmq:5672}
+
+# Тут немає http-секції: сервіс — чистий consumer черги
+jobs:
+  pool:
+    num_workers: ${RR_JOBS_WORKERS:-2}
+  consume: [ "notifications" ]
+  pipelines:
+    notifications:
+      driver: amqp
+      config:
+        queue: notifications
+        exchange: shop.events
+        exchange_type: direct
+        routing_key: notifications
+        durable: true
+        prefetch: 10
+
+logs:
+  mode: production
+  level: info
+  encoding: json
