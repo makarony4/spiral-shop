@@ -1,0 +1,31 @@
+version: "3"
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php app.php"
+  relay: pipes
+
+http:
+  address: 0.0.0.0:8080
+  pool:
+    num_workers: ${RR_HTTP_WORKERS:-4}
+    supervisor:
+      max_worker_memory: 128
+
+# gRPC для внутрішніх викликів між сервісами (orders -> catalog)
+grpc:
+  listen: tcp://0.0.0.0:9001
+  proto:
+    - "proto/catalog/v1/catalog.proto"
+  pool:
+    num_workers: ${RR_GRPC_WORKERS:-2}
+
+status:
+  address: 0.0.0.0:2114
+
+logs:
+  mode: production
+  level: info
+  encoding: json
