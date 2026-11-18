@@ -57,6 +57,9 @@ final class Kernel extends \Spiral\Framework\Kernel
             ValidatorBootloader::class,
             Framework\Security\FiltersBootloader::class,
 
+            // Черги: Spiral Queue поверх RoadRunner Jobs (RabbitMQ)
+            RoadRunnerBridge\QueueBootloader::class,
+
             // Database + Cycle ORM + міграції
             CycleBridge\DatabaseBootloader::class,
             CycleBridge\MigrationsBootloader::class,
