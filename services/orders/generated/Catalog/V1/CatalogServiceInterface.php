@@ -28,4 +28,13 @@ interface CatalogServiceInterface extends GRPC\ServiceInterface
     * @throws GRPC\Exception\InvokeException
     */
     public function ReserveStock(GRPC\ContextInterface $ctx, ReserveStockRequest $in): ReserveStockResponse;
+
+    /**
+    * @param GRPC\ContextInterface $ctx
+    * @param ReleaseStockRequest $in
+    * @return ReleaseStockResponse
+    *
+    * @throws GRPC\Exception\InvokeException
+    */
+    public function ReleaseStock(GRPC\ContextInterface $ctx, ReleaseStockRequest $in): ReleaseStockResponse;
 }
