@@ -14,6 +14,14 @@ http:
     supervisor:
       max_worker_memory: 128
 
+# gRPC для внутрішніх викликів між сервісами (orders -> catalog)
+grpc:
+  listen: tcp://0.0.0.0:9001
+  proto:
+    - "proto/catalog/v1/catalog.proto"
+  pool:
+    num_workers: ${RR_GRPC_WORKERS:-2}
+
 status:
   address: 0.0.0.0:2114
 

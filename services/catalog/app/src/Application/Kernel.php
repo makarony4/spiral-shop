@@ -52,6 +52,9 @@ final class Kernel extends \Spiral\Framework\Kernel
             Framework\Http\ErrorHandlerBootloader::class,
             AnnotatedRoutesBootloader::class,
 
+            // gRPC-сервер через RoadRunner (той самий процес, окремий воркер-пул)
+            RoadRunnerBridge\GRPCBootloader::class,
+
             // Валідація вхідних даних (Request Filters)
             ValidationBootloader::class,
             ValidatorBootloader::class,
