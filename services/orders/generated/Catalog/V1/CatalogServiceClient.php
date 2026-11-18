@@ -35,4 +35,15 @@ class CatalogServiceClient implements CatalogServiceInterface
 
         return $response;
     }
+
+    public function ReleaseStock(ContextInterface $ctx, ReleaseStockRequest $in): ReleaseStockResponse
+    {
+        [$response, $status] = $this->core->callAction(CatalogServiceInterface::class, '/'.self::NAME.'/ReleaseStock', [
+            'in' => $in,
+            'ctx' => $ctx,
+            'responseClass' => \GRPC\Catalog\V1\ReleaseStockResponse::class,
+        ]);
+
+        return $response;
+    }
 }

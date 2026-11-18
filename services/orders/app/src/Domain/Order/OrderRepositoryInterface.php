@@ -10,4 +10,7 @@ interface OrderRepositoryInterface
 
     /** @return list<Order> */
     public function latest(int $limit, ?string $customerEmail = null): array;
+
+    /** @return list<Order> */
+    public function cancelled(int $limit, ?string $customerEmail = null): array;
 }

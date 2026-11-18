@@ -98,6 +98,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    # Доступ з хоста (IDE, psql). Не 5432, щоб не конфліктувати з локальним Postgres.
+    ports: [ "${POSTGRES_PORT:-54321}:5432" ]
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U shop" ]
       interval: 3s

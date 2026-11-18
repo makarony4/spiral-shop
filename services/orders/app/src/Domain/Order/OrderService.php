@@ -51,4 +51,13 @@ final readonly class OrderService
 
         return $order;
     }
+
+    public function cancel(int $orderId): Order
+    {
+        $order = $this->get($orderId);
+        $order->cancel();
+        $this->em->persist($order)->run();
+
+        return $order;
+    }
 }

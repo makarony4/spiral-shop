@@ -24,6 +24,7 @@ final readonly class OrderResource implements \JsonSerializable
             'total' => $this->order->getTotal(),
             'customer_email' => $this->order->getCustomerEmail(),
             'created_at' => $this->order->getCreatedAt()->format(\DATE_ATOM),
+            'cancelled_at' => $this->order->getCancelledAt()?->format(\DATE_ATOM),
         ];
     }
 }

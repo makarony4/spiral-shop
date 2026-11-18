@@ -51,6 +51,7 @@ make logs
 | http://localhost:8080       | API Gateway                              |
 | http://localhost:8025       | Mailpit — листи, які надіслав notifications |
 | http://localhost:15672      | RabbitMQ UI (guest / guest)              |
+| `localhost:54321`           | Postgres (shop / secret), бази `catalog` та `orders`. Порт змінюється через `POSTGRES_PORT` |
 
 ### API
 
