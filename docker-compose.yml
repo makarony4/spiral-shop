@@ -1,0 +1,125 @@
+name: spiral-shop
+
+x-php-env: &php-env
+  # Логи Monolog -> RoadRunner logger -> stdout контейнера (JSON)
+  MONOLOG_DEFAULT_CHANNEL: roadrunner
+  # true -> детальні сторінки помилок зі стектрейсом (лише для локальної розробки)
+  DEBUG: "false"
+
+x-php-service: &php-service
+  restart: unless-stopped
+  networks: [ shop ]
+
+services:
+  # ---------- Edge ----------
+  gateway:
+    image: nginx:1.27-alpine
+    ports: [ "8080:80" ]
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/proxy_params.conf:/etc/nginx/proxy_params.conf:ro
+    depends_on:
+      catalog: { condition: service_healthy }
+      orders: { condition: service_healthy }
+    networks: [ shop ]
+
+  # ---------- Spiral microservices ----------
+  catalog:
+    <<: *php-service
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: app
+      args:
+        SERVICE: catalog
+    environment:
+      <<: *php-env
+      DB_HOST: postgres
+      DB_DATABASE: catalog
+      DB_USERNAME: shop
+      DB_PASSWORD: secret
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck: &rr-http-healthcheck
+      # status-плагін RoadRunner: 200, коли воркери готові
+      test: [ "CMD", "wget", "-qO-", "http://127.0.0.1:2114/health?plugin=http" ]
+      interval: 5s
+      retries: 20
+
+  orders:
+    <<: *php-service
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: app
+      args:
+        SERVICE: orders
+        PHP_EXTENSIONS: "pdo_pgsql sockets opcache grpc"  # ext-grpc для gRPC-клієнта
+    environment:
+      <<: *php-env
+      DB_HOST: postgres
+      DB_DATABASE: orders
+      DB_USERNAME: shop
+      DB_PASSWORD: secret
+      # gRPC-адреса catalog (ім'я змінної задає згенерований ServiceBootloader)
+      CATALOG_SERVICE_HOST: catalog:9001
+      CATALOG_GRPC_TIMEOUT_MS: 2000
+      AMQP_DSN: amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      catalog: { condition: service_healthy }
+    healthcheck: *rr-http-healthcheck
+
+  notifications:
+    <<: *php-service
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: app
+      args:
+        SERVICE: notifications
+    environment:
+      <<: *php-env
+      AMQP_DSN: amqp://guest:guest@rabbitmq:5672
+      MAILER_DSN: smtp://mailpit:1025
+      MAILER_FROM: shop@example.test
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      mailpit: { condition: service_started }
+
+  # ---------- Infrastructure ----------
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: shop
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U shop" ]
+      interval: 3s
+      retries: 20
+    networks: [ shop ]
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    ports: [ "15672:15672" ]
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 5s
+      retries: 20
+    networks: [ shop ]
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports: [ "8025:8025" ]
+    networks: [ shop ]
+
+networks:
+  shop: {}
+
+volumes:
+  pgdata: {}
