@@ -9,6 +9,8 @@ use App\Domain\Product\ProductService;
 use GRPC\Catalog\V1\CatalogServiceInterface;
 use GRPC\Catalog\V1\GetProductRequest;
 use GRPC\Catalog\V1\Product;
+use GRPC\Catalog\V1\ReleaseStockRequest;
+use GRPC\Catalog\V1\ReleaseStockResponse;
 use GRPC\Catalog\V1\ReserveStockRequest;
 use GRPC\Catalog\V1\ReserveStockResponse;
 use Spiral\RoadRunner\GRPC\ContextInterface;
@@ -26,7 +28,7 @@ final readonly class CatalogService implements CatalogServiceInterface
 
     public function GetProduct(ContextInterface $ctx, GetProductRequest $in): Product
     {
-        return $this->toMessage($this->products->get((int) $in->getId()));
+        return $this->toMessage($this->products->get((int)$in->getId()));
     }
 
     public function ReserveStock(ContextInterface $ctx, ReserveStockRequest $in): ReserveStockResponse
@@ -35,7 +37,7 @@ final readonly class CatalogService implements CatalogServiceInterface
             throw GRPCException::create('quantity must be >= 1', StatusCode::INVALID_ARGUMENT);
         }
 
-        $product = $this->products->reserve((int) $in->getProductId(), $in->getQuantity());
+        $product = $this->products->reserve((int)$in->getProductId(), $in->getQuantity());
 
         return new ReserveStockResponse(['product' => $this->toMessage($product)]);
     }
@@ -48,5 +50,16 @@ final readonly class CatalogService implements CatalogServiceInterface
             'price' => $product->getPrice(),
             'stock' => $product->getStock(),
         ]);
+    }
+
+    public function ReleaseStock(ContextInterface $ctx, ReleaseStockRequest $in): ReleaseStockResponse
+    {
+        if ($in->getQuantity() < 1) {
+            throw GRPCException::create('quantity must be >= 1', StatusCode::INVALID_ARGUMENT);
+        }
+
+        $product = $this->products->release((int)$in->getProductId(), $in->getQuantity());
+
+        return new ReleaseStockResponse(['product' => $this->toMessage($product)]);
     }
 }

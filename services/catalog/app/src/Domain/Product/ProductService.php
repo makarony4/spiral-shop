@@ -52,4 +52,19 @@ final readonly class ProductService
 
         return $product;
     }
+
+    public function release(int $id, int $quantity): Product
+    {
+        $affected = $this->db
+            ->update('products', ['stock' => new Expression('stock + ?', $quantity)], [
+                'id' => $id,
+            ])
+            ->run();
+
+        if ($affected === 0) {
+            throw new ProductNotFoundException($id);
+        }
+
+        return $this->get($id);
+    }
 }
