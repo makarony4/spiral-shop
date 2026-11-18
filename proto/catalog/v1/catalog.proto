@@ -1,0 +1,36 @@
+// Контракт catalog-сервісу. Єдине джерело правди для сервера (catalog) і клієнта (orders).
+// Після змін: make proto
+syntax = "proto3";
+
+package catalog.v1;
+
+option php_namespace = "GRPC\\Catalog\\V1";
+option php_metadata_namespace = "GRPC\\GPBMetadata\\Catalog\\V1";
+
+service CatalogService {
+  // Повертає товар за id. NOT_FOUND, якщо товару немає.
+  rpc GetProduct (GetProductRequest) returns (Product);
+
+  // Атомарно списує залишок. NOT_FOUND або FAILED_PRECONDITION (не вистачає залишку).
+  rpc ReserveStock (ReserveStockRequest) returns (ReserveStockResponse);
+}
+
+message Product {
+  int64 id = 1;
+  string name = 2;
+  int64 price = 3; // у копійках
+  int64 stock = 4;
+}
+
+message GetProductRequest {
+  int64 id = 1;
+}
+
+message ReserveStockRequest {
+  int64 product_id = 1;
+  int32 quantity = 2;
+}
+
+message ReserveStockResponse {
+  Product product = 1;
+}
